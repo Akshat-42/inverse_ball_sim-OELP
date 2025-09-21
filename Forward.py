@@ -17,11 +17,11 @@ rho = 1.293
 vmag_in = 22.22              #m/s
 pos_in = np.array([0,0,2.0]) #m
 phi_angle_in = -5            #deg
-theta_angle_in = 2           #deg
-spin_mag = 25                #rps
-spin_angle = -30             #deg
+theta_angle_in = 0           #deg
+# spin_mag = 25                #rps
+# spin_angle = -30             #deg
 spin_x = 0                   #rad/s
-spin_y = 50*np.pi            #rad/s
+spin_y = 1*np.pi            #rad/s
 spin_z = 0                   #rad/s
 
 
@@ -52,6 +52,7 @@ def add_data(lst,sample,position,velocity):
         "velocity":velocity,
     })
 
+
 def bounce_calc(v,spin_vect):
     vz_prev = v[Comp.z]
     v[Comp.z] = -v[Comp.z]*cor
@@ -70,6 +71,7 @@ def bounce_calc(v,spin_vect):
 
         v += friction_impulse/ball_mass
 
+final_pts = []
 def air_sim(pos_in,v_in,sps,gf,mb):
     trajectory = []
     add_data(trajectory,0,pos_in.tolist(),v_in.tolist())
@@ -83,22 +85,23 @@ def air_sim(pos_in,v_in,sps,gf,mb):
         # t = sample/sps
         drag_f = -0.5*rho*ball_area*dcf*curr_vel*np.linalg.norm(curr_vel)
         drag_acc = mb*drag_f
-        lift_f = 0.5*rho*ball_area*cl*np.linalg.norm(curr_vel)**2
+        lift_dir_unnormalized = np.cross(spin_vect,curr_vel)
+        lift_f = 0.5*rho*ball_area*cl*np.linalg.norm(curr_vel)**2*(lift_dir_unnormalized/np.linalg.norm(lift_dir_unnormalized))
         lift_acc = lift_f*ball_mass
         curr_acc = drag_acc + gf/mb + lift_acc
         curr_vel += curr_acc*t_step
         curr_pos += curr_vel*t_step
         add_data(trajectory,sample,curr_pos.tolist(),curr_vel.tolist())
         sample+=1
+    add_data(final_pts,sample,curr_pos.tolist(),curr_vel.tolist())
+    # bounce_calc(curr_vel,spin_vect)
 
-    bounce_calc(curr_vel,spin_vect)
-
-    while curr_pos[Comp.x] < 20.12:
-        # t = sample/sps
-        curr_vel += curr_acc*t_step
-        curr_pos += curr_vel*t_step
-        add_data(trajectory,sample,curr_pos.tolist(),curr_vel.tolist())
-        sample+=1
+    # while curr_pos[Comp.x] < 20.12:
+    #     # t = sample/sps
+    #     curr_vel += curr_acc*t_step
+    #     curr_pos += curr_vel*t_step
+    #     add_data(trajectory,sample,curr_pos.tolist(),curr_vel.tolist())
+    #     sample+=1
 
     return trajectory
 
@@ -109,6 +112,9 @@ test_trajectory = air_sim(pos_in,v_in,60,gf,ball_mass)
 output_file = r"Trajectory.json"
 with open(output_file,"w") as file:
     json.dump(test_trajectory,file,indent=4) 
+final_pts_file = r"final_pts.json"
+with open(final_pts_file,"w") as file:
+    json.dump(final_pts,file,indent=4) 
     
 
 
