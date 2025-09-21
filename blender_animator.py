@@ -1,4 +1,4 @@
-import bpy
+import bpy # type: ignore
 import json
 import os
 
@@ -54,7 +54,7 @@ def setup_and_animate(ball_name="CricketBall", filename="trajectory.json"):
     if trajectory_data:
         bpy.context.scene.frame_end = trajectory_data[-1]["sample"]//(sps//fps)
         
-    print(f"Animation complete for '{ball_name}' with {len(trajectory_data)} keyframes. ✨")
+    print(f"Animation complete for '{ball_name}' with {len(trajectory_data)} keyframes.")
 
 # --- Run the main function ---
 setup_and_animate()

@@ -9,20 +9,32 @@ gf = np.array([0,0,-9.81])*ball_mass #N
 ball_radius = 0.035 #m
 cor = 0.5 #resititution
 cf = 0.35 #friction
+dcf = 0.45 #drag coefficient
+rho = 1.293
+
 
 #initial characteristics
-vmag_in = 22.22 #m/s
+vmag_in = 22.22              #m/s
 pos_in = np.array([0,0,2.0]) #m
-phi_angle_in = 0
-theta_angle_in = 3
-spin_mag = 26#rps
-spin_angle = -45 #deg
+phi_angle_in = -5            #deg
+theta_angle_in = 2           #deg
+spin_mag = 25                #rps
+spin_angle = -30             #deg
+spin_x = 0                   #rad/s
+spin_y = 50*np.pi            #rad/s
+spin_z = 0                   #rad/s
 
-spin_mag_rads = spin_mag*2*np.pi
-spin_angle_rad = spin_angle*np.pi/180
-spin_vect = np.array([spin_mag_rads*np.sin(spin_angle_rad),spin_mag_rads*np.cos(spin_angle_rad),0])
+
+#conversions
+# spin_mag_rads = spin_mag*2*np.pi
+# spin_angle_rad = spin_angle*np.pi/180
+
+spin_vect = np.array([spin_x,spin_y,spin_z])
+spin_mag = np.linalg.norm(spin_vect)
 theta_angle_rad = theta_angle_in*np.pi/180 #rad
 phi_angle_rad = phi_angle_in*np.pi/180 #rad
+ball_area = np.pi*ball_radius**2
+cl = (7.91*10**-4)*spin_mag
 
 class Comp(IntEnum):
     x = 0
@@ -69,6 +81,11 @@ def air_sim(pos_in,v_in,sps,gf,mb):
     
     while curr_pos[Comp.z] > ball_radius or curr_vel[Comp.z]>0:
         # t = sample/sps
+        drag_f = -0.5*rho*ball_area*dcf*curr_vel*np.linalg.norm(curr_vel)
+        drag_acc = mb*drag_f
+        lift_f = 0.5*rho*ball_area*cl*np.linalg.norm(curr_vel)**2
+        lift_acc = lift_f*ball_mass
+        curr_acc = drag_acc + gf/mb + lift_acc
         curr_vel += curr_acc*t_step
         curr_pos += curr_vel*t_step
         add_data(trajectory,sample,curr_pos.tolist(),curr_vel.tolist())
